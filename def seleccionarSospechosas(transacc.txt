@@ -1,0 +1,46 @@
+def seleccionarSospechosas(transacciones):
+    sospechosas = []
+    
+    for i in range(len(transacciones)):
+        es_sospechosa = False
+        monto = transacciones[i][0]
+        timestamp = transacciones[i][1]
+        ciudad = transacciones[i][2]
+        
+        if monto > 1000:
+            es_sospechosa = True
+        
+        if i > 0:
+            timestamp_anterior = transacciones[i-1][1]
+            ciudad_anterior = transacciones[i-1][2]
+            diferencia_tiempo = timestamp - timestamp_anterior
+            
+            if diferencia_tiempo < 60:
+                es_sospechosa = True
+            
+            if ciudad != ciudad_anterior and diferencia_tiempo < 3600:
+                es_sospechosa = True
+        
+        if es_sospechosa:
+            sospechosas.append(i)
+    
+    return sospechosas
+
+
+transacciones = [
+    [200, 0, 'Lima'],
+    [1500, 20, 'Lima'],
+    [300, 40, 'Cusco'],
+    [200, 4000, 'Cusco'],
+    [100, 4200, 'Arequipa']
+]
+
+resultado = seleccionarSospechosas(transacciones)
+print("Indices de la lista: ", resultado)
+
+print("\nAnalisis:")
+print("Trans 1 (índice 0): monto 200, no sospechosa")
+print("Trans 2 (índice 1): monto 1500 > 1000, sospechosa")
+print("Trans 3 (índice 2): 20 seg despues y ciudad diferente, sospechosa") 
+print("Trans 4 (índice 3): paso mucho tiempo, no sospechosa")
+print("Trans 5 (índice 4): ciudad diferente en menos de 1 hora, sospechosa")
