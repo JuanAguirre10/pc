@@ -1,0 +1,97 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+np.random.seed(42)
+
+catalogo_motivos = pd.DataFrame({
+    'Codigo_Motivo': ['TUR', 'RES', 'NEG', 'PER', 'TRA'],
+    'Descripcion_Motivo': ['Turismo', 'Residencia', 'Negocios', 'Personal', 'Trabajo'],
+    'Costo_Promedio_Viaje': [1500, 3000, 2500, 1800, 2000]
+})
+
+print("Tabla: catalogo_motivos")
+print(catalogo_motivos)
+print("\n")
+
+n_registros = 1000
+registros_salida = pd.DataFrame({
+    'ID_Registro': range(1, n_registros + 1),
+    'Fecha_Salida': pd.date_range(start='1990-01-01', end='2019-12-31', periods=n_registros),
+    'Codigo_Motivo': np.random.choice(
+        ['TUR', 'RES', 'NEG', 'PER', 'TRA'],
+        size=n_registros,
+        p=[0.83, 0.008, 0.004, 0.006, 0.152]
+    ),
+    'Genero': np.random.choice(['M', 'F'], size=n_registros),
+    'Edad': np.random.randint(18, 70, size=n_registros),
+    'Pais_Destino': np.random.choice(
+        ['USA', 'España', 'Chile', 'Argentina', 'Italia', 'Brasil'],
+        size=n_registros
+    ),
+    'Requiere_Visa': np.random.choice(['Sí', 'No'], size=n_registros)
+})
+
+print(f"Tabla: registros_salida (primeras 10 de {n_registros})")
+print(registros_salida.head(10))
+print("\n")
+
+print("2. Join realizado: INNER JOIN usando columna 'Codigo_Motivo'")
+
+df_migracion = registros_salida.merge(
+    catalogo_motivos,
+    on='Codigo_Motivo',
+    how='inner'
+)
+
+print("\nDataFrame resultante del join (primeras 10 filas):")
+print(df_migracion.head(10))
+print("\n")
+
+distribucion = df_migracion['Descripcion_Motivo'].value_counts()
+distribucion_pct = (distribucion / len(df_migracion) * 100).round(1)
+
+print("Distribución porcentual de motivos de salida:")
+for motivo, porcentaje in distribucion_pct.items():
+    print(f"  {motivo}: {porcentaje}%")
+print("\n")
+
+fig, ax = plt.subplots(figsize=(12, 8))
+
+colores_motivos = {
+    'Turismo': '#FF6B6B',
+    'Residencia': '#FFA500',
+    'Negocios': '#4ECDC4',
+    'Personal': '#95E1D3',
+    'Trabajo': '#F38181'
+}
+
+colors = [colores_motivos.get(motivo, '#999999') for motivo in distribucion_pct.index]
+
+wedges, texts, autotexts = ax.pie(
+    distribucion_pct.values,
+    labels=distribucion_pct.index,
+    autopct='%1.1f%%',
+    colors=colors,
+    startangle=90,
+    textprops={'fontsize': 11, 'weight': 'bold'},
+    explode=[0.05 if val == distribucion_pct.max() else 0 for val in distribucion_pct.values]
+)
+
+for autotext in autotexts:
+    autotext.set_color('white')
+    autotext.set_fontsize(12)
+    autotext.set_weight('bold')
+
+plt.title(
+    '¿Qué motivó a los peruanos y peruanas\na salir del país en el período 1990-2019?',
+    fontsize=16,
+    fontweight='bold',
+    pad=20
+)
+
+legend_labels = [f'{motivo}: {pct}%' for motivo, pct in zip(distribucion_pct.index, distribucion_pct.values)]
+plt.legend(legend_labels, loc='upper left', bbox_to_anchor=(1, 1))
+
+plt.tight_layout()
+plt.show()

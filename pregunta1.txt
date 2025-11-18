@@ -1,0 +1,71 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+departamentos_data = {
+    'Departamento': [
+        'Amazonas', 'Áncash', 'Apurímac', 'Arequipa', 'Ayacucho',
+        'Cajamarca', 'Cusco', 'Huancavelica', 'Huánuco', 'Ica',
+        'Junín', 'La Libertad', 'Lambayeque', 'Lima', 'Loreto',
+        'Madre de Dios', 'Moquegua', 'Pasco', 'Piura', 'Puno',
+        'San Martín', 'Tacna', 'Tumbes', 'Ucayali'
+    ],
+    'Porcentaje_Pobreza': [
+        60.0, 35.0, 65.0, 15.0, 65.0,
+        65.0, 65.0, 80.0, 65.0, 15.0,
+        35.0, 35.0, 35.0, 15.0, 65.0,
+        15.0, 35.0, 65.0, 35.0, 65.0,
+        35.0, 15.0, 20.0, 35.0
+    ]
+}
+
+def clasificar_desarrollo(porcentaje):
+    if 75.2 <= porcentaje <= 85.7:
+        return 'Bajo'
+    elif 51.9 <= porcentaje <= 75.1:
+        return 'Medio-bajo'
+    elif 25.1 <= porcentaje <= 51.8:
+        return 'Medio-alto'
+    elif 0.0 <= porcentaje <= 25.0:
+        return 'Alto'
+    else:
+        return 'Sin clasificar'
+
+df_pobreza = pd.DataFrame(departamentos_data)
+df_pobreza['Nivel_Desarrollo'] = df_pobreza['Porcentaje_Pobreza'].apply(clasificar_desarrollo)
+
+print("1. DataFrame con departamentos y su nivel de desarrollo:")
+print(df_pobreza)
+print("\n")
+
+df_medio_bajo = df_pobreza[df_pobreza['Nivel_Desarrollo'] == 'Medio-bajo']
+print("2. Departamentos con nivel de desarrollo Medio-bajo:")
+print(df_medio_bajo)
+print("\n")
+
+df_ordenado = df_pobreza.sort_values('Porcentaje_Pobreza')
+print("3. Departamentos ordenados por porcentaje de pobreza (menor a mayor):")
+print(df_ordenado)
+print("\n")
+
+conteo_niveles = df_pobreza['Nivel_Desarrollo'].value_counts().sort_index()
+print("4. Conteo de departamentos por nivel de desarrollo:")
+print(conteo_niveles)
+
+plt.figure(figsize=(10, 6))
+colores = ['#2ecc71', '#f39c12', '#e74c3c', '#c0392b']
+conteo_niveles.plot(kind='bar', color=colores, edgecolor='black', linewidth=1.2)
+plt.title('Número de Departamentos por Nivel de Desarrollo', fontsize=14, fontweight='bold')
+plt.xlabel('Nivel de Desarrollo', fontsize=12)
+plt.ylabel('Número de Departamentos', fontsize=12)
+plt.xticks(rotation=45)
+plt.grid(axis='y', alpha=0.3)
+plt.tight_layout()
+plt.show()
+
+print("\n5. PREGUNTA REFLEXIVA:")
+print("La mayoría de departamentos tiene niveles Medio-bajo y Medio-alto de desarrollo,")
+print("indicando alta pobreza en gran parte del territorio.")
+print("Solo pocos departamentos tienen nivel Alto (0%-25% pobreza), principalmente costeros")
+print("como Lima, Arequipa, Tacna y Moquegua, evidenciando concentración de recursos.")
+print("Los departamentos amazónicos y andinos tienen mayor pobreza, mientras que los costeros")
+print("muestran mejor desarrollo, evidenciando necesidad de descentralización.")
