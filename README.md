@@ -19,7 +19,10 @@ setItems(data.results.slice(0, 6));
 ```jsx
 const response = await fetch('https://restcountries.com/v3.1/all');
 const data = await response.json();
-setItems(data.slice(0, 6));
+// ⚠️ IMPORTANTE: Verificar que data es un array
+if (Array.isArray(data)) {
+  setItems(data.slice(0, 6));
+}
 ```
 
 **✅ CAMBIAR TAMBIÉN EL TÍTULO:**
@@ -48,17 +51,27 @@ const Entities = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch('https://restcountries.com/v3.1/all');
-      const data = await response.json();
-      setAllCountries(data);
+      try {
+        const response = await fetch('https://restcountries.com/v3.1/all');
+        const data = await response.json();
+        // ⚠️ IMPORTANTE: Verificar que es un array
+        if (Array.isArray(data)) {
+          setAllCountries(data);
+        }
+      } catch (error) {
+        console.error('Error fetching countries:', error);
+      }
     };
     fetchData();
   }, []);
 
   useEffect(() => {
-    const startIndex = (page - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    setItems(allCountries.slice(startIndex, endIndex));
+    // ⚠️ IMPORTANTE: Verificar que allCountries tiene datos
+    if (allCountries.length > 0) {
+      const startIndex = (page - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      setItems(allCountries.slice(startIndex, endIndex));
+    }
   }, [page, allCountries, setItems]);
 
   const totalPages = Math.ceil(allCountries.length / itemsPerPage);
