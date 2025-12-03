@@ -1,6 +1,14 @@
-# 🌍 Migración: Rick & Morty → Rest Countries API
+# 🌍 Solución: Error 400 en Rest Countries API
 
-Pasos exactos para cambiar de Rick & Morty API a Rest Countries API.
+## ⚠️ Problema Detectado
+
+La API `https://restcountries.com/v3.1/all` está devolviendo error 400 (Bad Request).
+
+---
+
+## ✅ SOLUCIÓN: Usar JSONPlaceholder + Flags API
+
+Vamos a usar una combinación más confiable:
 
 ---
 
@@ -8,36 +16,34 @@ Pasos exactos para cambiar de Rick & Morty API a Rest Countries API.
 
 ### 1️⃣ `src/pages/Home.jsx`
 
-**❌ ELIMINAR:**
-```jsx
-const response = await fetch('https://rickandmortyapi.com/api/character');
-const data = await response.json();
-setItems(data.results.slice(0, 6));
-```
+**REEMPLAZA TODO EL `useEffect` POR:**
 
-**✅ REEMPLAZAR POR:**
 ```jsx
-const response = await fetch('https://restcountries.com/v3.1/all');
-const data = await response.json();
-// ⚠️ IMPORTANTE: Verificar que data es un array
-if (Array.isArray(data)) {
-  setItems(data.slice(0, 6));
-}
-```
-
-**✅ CAMBIAR TAMBIÉN EL TÍTULO:**
-```jsx
-<h1 className="display-4">World Countries</h1>
-<p className="lead">Exploring countries with Rest Countries API</p>
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const response = await fetch('https://restcountries.com/v3.1/region/europe');
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        setItems(data.slice(0, 6));
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setItems([]);
+    }
+  };
+  if (items.length === 0) {
+    fetchData();
+  }
+}, []);
 ```
 
 ---
 
 ### 2️⃣ `src/pages/Entities.jsx`
 
-**❌ ELIMINAR TODO EL CÓDIGO ACTUAL**
+**REEMPLAZA TODO EL ARCHIVO POR:**
 
-**✅ REEMPLAZAR POR:**
 ```jsx
 import { useState, useEffect } from 'react';
 import { useStore } from '../store/store';
@@ -47,26 +53,30 @@ const Entities = () => {
   const { items, setItems } = useStore();
   const [allCountries, setAllCountries] = useState([]);
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const itemsPerPage = 12;
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
-        const response = await fetch('https://restcountries.com/v3.1/all');
+        const response = await fetch('https://restcountries.com/v3.1/region/europe');
         const data = await response.json();
-        // ⚠️ IMPORTANTE: Verificar que es un array
+        
         if (Array.isArray(data)) {
           setAllCountries(data);
         }
       } catch (error) {
         console.error('Error fetching countries:', error);
+        setAllCountries([]);
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
   }, []);
 
   useEffect(() => {
-    // ⚠️ IMPORTANTE: Verificar que allCountries tiene datos
     if (allCountries.length > 0) {
       const startIndex = (page - 1) * itemsPerPage;
       const endIndex = startIndex + itemsPerPage;
@@ -76,30 +86,47 @@ const Entities = () => {
 
   const totalPages = Math.ceil(allCountries.length / itemsPerPage);
 
+  if (loading) {
+    return (
+      <div className="container py-5 text-center">
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container py-5">
-      <h2 className="mb-4">All Countries</h2>
-      <CardList items={items} />
+      <h2 className="mb-4">European Countries</h2>
+      
+      {items.length === 0 ? (
+        <p>No countries found</p>
+      ) : (
+        <CardList items={items} />
+      )}
 
-      <div className="d-flex justify-content-center gap-2 mt-4">
-        <button 
-          className="btn btn-primary" 
-          onClick={() => setPage(page - 1)} 
-          disabled={page === 1}
-        >
-          Previous
-        </button>
-        <span className="btn btn-outline-secondary disabled">
-          Page {page} of {totalPages}
-        </span>
-        <button 
-          className="btn btn-primary" 
-          onClick={() => setPage(page + 1)}
-          disabled={page === totalPages}
-        >
-          Next
-        </button>
-      </div>
+      {totalPages > 0 && (
+        <div className="d-flex justify-content-center gap-2 mt-4">
+          <button 
+            className="btn btn-primary" 
+            onClick={() => setPage(page - 1)} 
+            disabled={page === 1}
+          >
+            Previous
+          </button>
+          <span className="btn btn-outline-secondary disabled">
+            Page {page} of {totalPages}
+          </span>
+          <button 
+            className="btn btn-primary" 
+            onClick={() => setPage(page + 1)}
+            disabled={page >= totalPages}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };
@@ -111,9 +138,8 @@ export default Entities;
 
 ### 3️⃣ `src/components/Card.jsx`
 
-**❌ ELIMINAR TODO EL CÓDIGO ACTUAL**
+**MANTÉN ESTE CÓDIGO (NO CAMBIAR):**
 
-**✅ REEMPLAZAR POR:**
 ```jsx
 const Card = ({ item }) => {
   return (
@@ -147,32 +173,48 @@ export default Card;
 
 ---
 
-## 🎯 Resumen de Cambios
+## 🔧 ¿Por Qué Este Cambio Funciona?
 
-| Archivo | Acción |
-|---------|--------|
-| `Home.jsx` | Cambiar URL y usar `data.slice(0, 6)` |
-| `Entities.jsx` | Reemplazar todo (lógica de paginación local) |
-| `Card.jsx` | Reemplazar todo (mostrar bandera, capital, región, población) |
-
----
-
-## ✅ Verificación
-
-Después de los cambios, deberías ver:
-
-- ✅ Banderas de países en lugar de personajes
-- ✅ Información: nombre, capital, región, población
-- ✅ Paginación funcionando (12 países por página)
-- ✅ 6 países en Home
-- ✅ Todos los países en Entities
+1. ✅ Usamos `/v3.1/region/europe` en lugar de `/v3.1/all` (más confiable)
+2. ✅ Agregamos manejo de errores con `try-catch`
+3. ✅ Verificamos que `data` sea un array antes de usar `.slice()`
+4. ✅ Agregamos estado de "loading"
+5. ✅ Protegemos contra páginas inválidas
 
 ---
 
-## 🚀 Comandos Finales
+## 🎯 Alternativa 2: API de Países Americas
 
-```bash
-npm run dev
+Si también falla Europa, cambia la URL por:
+
+```jsx
+const response = await fetch('https://restcountries.com/v3.1/region/americas');
 ```
 
-¡Listo! Tu app ahora consume Rest Countries API 🌍
+---
+
+## 🚀 Verifica que funcione:
+
+1. Guarda todos los archivos
+2. Refresca el navegador (Ctrl + R o Cmd + R)
+3. Abre la consola (F12) para ver si hay errores
+4. Deberías ver países europeos cargando
+
+---
+
+## 📌 Si TODAVÍA hay error 400:
+
+Es posible que tu red o ISP esté bloqueando la API. En ese caso:
+
+### Opción B: Usar API alternativa (Countries Now)
+
+**Cambia la URL en ambos archivos por:**
+
+```jsx
+const response = await fetch('https://countriesnow.space/api/v0.1/countries/flag/images');
+```
+
+Y ajusta el Card.jsx para usar:
+- `data.data` en lugar de `data`
+- `item.flag` en lugar de `item.flags.png`
+- `item.name` para el nombre
